@@ -7,16 +7,19 @@ backendStore:
     host: "postgres-postgresql.data-storage.svc.cluster.local"
     port: 5432
     database: "ds_db"
-    user: "mlops"
-    password: ""
+  existingDatabaseSecret:
+    name: "postgres-admin"
+    usernameKey: "postgres-user"
+    passwordKey: "postgres-password"
 
 artifactRoot:
   s3:
     enabled: true
     bucket: "hello-world-bucket"       # existing bucket in MinIO
-    awsAccessKeyId: "minioadmin"
-    awsSecretAccessKey: ""
-
+    existingSecret:
+      name: "minio"
+      keyOfAccessKeyId: "root-user"
+      keyOfSecretAccessKey: "root-password"
 
 extraEnvVars:
   MLFLOW_S3_ENDPOINT_URL: "http://minio.data-storage.svc.cluster.local:9000"
@@ -48,3 +51,4 @@ resources:
     cpu: "500m"
     memory: "1Gi"
   requests:
+    cpu: "250m"
