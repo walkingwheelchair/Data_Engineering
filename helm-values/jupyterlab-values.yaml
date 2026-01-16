@@ -1,0 +1,88 @@
+# JupyterHub Helm values for a single-user JupyterLab setup
+
+hub:
+  # Use default SQLite on PVC — no storageClass or resources here
+  db:
+    type: sqlite-pvc
+  config:
+    JupyterHub:
+      authenticator_class: "dummy"
+    DummyAuthenticator:
+      password: ""
+
+# change to NodePort, if not using ingress or port-forwarding
+proxy:
+  service:
+    type: ClusterIP
+
+singleuser:
+  image:
+    name: jupyter/base-notebook
+    tag: lab-4.0.5
+
+  # Storage configuration must match chart schema
+  storage:
+    type: dynamic
+    dynamic:
+      # Only the storageClass key here — no size under dynamic
+      storageClass: local-path
+
+  # CPU / memory shape
+  cpu:
+    guarantee: 0.5
+    limit: 1
+
+  memory:
+    guarantee: 512M
+    limit: 1G
+
+    
+
+  extraEnv:
+  # --- MLflow / S3 (MinIO) ---
+    AWS_ACCESS_KEY_ID:
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: root-user
+
+    AWS_SECRET_ACCESS_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: minio
+          key: root-password
+
+    MLFLOW_S3_ENDPOINT_URL: "http://minio.data-storage.svc.cluster.local:9000"
+
+    AWS_DEFAULT_REGION: "us-east-1"
+
+    # --- Postgres ---
+    POSTGRES_HOST: "postgres-postgresql.data-storage.svc.cluster.local"
+    POSTGRES_PORT: "5432"
+    POSTGRES_DB: "ds_db"
+
+    POSTGRES_USER:
+      valueFrom:
+        secretKeyRef:
+          name: postgres-admin
+          key: postgres-user
+
+    POSTGRES_PASSWORD:
+      valueFrom:
+        secretKeyRef:
+          name: postgres-admin
+          key: postgres-password
+
+ingress:
+  enabled: true
+  annotations: 
+    cert-manager.io/cluster-issuer: letsencrypt
+  ingressClassName: nginx
+  hosts: 
+    - jupyterlab.student-sepf.dski23a.timebertt.dev
+  tls: 
+    - hosts:
+        - jupyterlab.student-sepf.dski23a.timebertt.dev
+      secretName: jupyterlab-tls
+
+  

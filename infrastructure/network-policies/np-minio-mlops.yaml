@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mlops-to-minio
+  namespace: data-storage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: mlops
+    ports:
+    - protocol: TCP
+      port: 9000

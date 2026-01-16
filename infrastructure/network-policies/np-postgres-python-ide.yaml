@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-python-ide-to-postgres
+  namespace: data-storage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: python-ide
+    ports:
+    - protocol: TCP
+      port: 5432
