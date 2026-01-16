@@ -13,7 +13,6 @@ spec:
     helm:
       valueFiles:
         - $values/helm-values/jupyterlab-values.yaml
-      timeout: 300
   - repoURL: https://github.com/walkingwheelchair/Data_Engineering.git
     targetRevision: main
     ref: values
