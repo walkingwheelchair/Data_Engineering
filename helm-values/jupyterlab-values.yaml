@@ -1,7 +1,5 @@
-# JupyterHub Helm values for a single-user JupyterLab setup
 
 hub:
-  # Use default SQLite on PVC — no storageClass or resources here
   db:
     type: sqlite-pvc
   config:
@@ -10,24 +8,20 @@ hub:
     DummyAuthenticator:
       password: ""
 
-# change to NodePort, if not using ingress or port-forwarding
 proxy:
   service:
     type: ClusterIP
 
 singleuser:
   image:
-    name: jupyter/base-notebook
-    tag: lab-4.0.5
+    name: ghcr.io/marius2311/jupyterlab-ml
+    tag: "1.0.2"
 
-  # Storage configuration must match chart schema
   storage:
     type: dynamic
     dynamic:
-      # Only the storageClass key here — no size under dynamic
       storageClass: local-path
 
-  # CPU / memory shape
   cpu:
     guarantee: 0.5
     limit: 1
@@ -36,10 +30,7 @@ singleuser:
     guarantee: 512M
     limit: 1G
 
-    
-
   extraEnv:
-  # --- MLflow / S3 (MinIO) ---
     AWS_ACCESS_KEY_ID:
       valueFrom:
         secretKeyRef:
@@ -52,11 +43,24 @@ singleuser:
           name: minio
           key: root-password
 
+    GIT_USERNAME:
+      valueFrom:
+        secretKeyRef:
+          name: github-git-credentials
+          key: GIT_USERNAME
+
+    GIT_TOKEN:
+      valueFrom:
+        secretKeyRef:
+          name: github-git-credentials
+          key: GIT_TOKEN
+
     MLFLOW_S3_ENDPOINT_URL: "http://minio.data-storage.svc.cluster.local:9000"
+
+    MLFLOW_TRACKING_URI: "http://mlflow.mlops.svc.cluster.local:5000"
 
     AWS_DEFAULT_REGION: "us-east-1"
 
-    # --- Postgres ---
     POSTGRES_HOST: "postgres-postgresql.data-storage.svc.cluster.local"
     POSTGRES_PORT: "5432"
     POSTGRES_DB: "ds_db"
