@@ -1,0 +1,46 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  interval: 5m
+  install:
+    createNamespace: true
+  chart:
+    spec:
+      chart: external-dns
+      # version: "1.15.0"   # optional
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: flux-system
+  values:
+    provider: google
+
+    # robust: Flag erzwingt das Projekt, selbst wenn 'google.project' ignoriert würde
+    extraArgs:
+      - --google-project=timebertt-dhbw
+      - --policy=upsert-only
+      - --registry=txt
+      - --txt-owner-id=student-sepf
+      - --domain-filter=dski23a.timebertt.dev
+      - --source=ingress
+      - --source=service
+
+    # ADC sauber setzen: Secret mounten + ENV auf die JSON-Datei zeigen lassen
+    env:
+      - name: GOOGLE_APPLICATION_CREDENTIALS
+        value: /var/secrets/google/service-account.json
+    extraVolumes:
+      - name: gcp-sa
+        secret:
+          secretName: google-clouddns
+    extraVolumeMounts:
+      - name: gcp-sa
+        mountPath: /var/secrets/google
+        readOnly: true
+
+    # optional (manche Chart-Versionen setzen daraus ebenfalls das Flag)
+    google:
+      project: timebertt-dhbw
